@@ -1,0 +1,143 @@
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Gestão Agro - Pastagem</title>
+</head>
+<body class="bg-gray-100 flex h-screen">
+    {{>menu}}
+
+    <div class="ml-64 p-8 w-full">
+        <div class="flex mb-4">
+            <input type="text" placeholder="Buscar pastagem..." class="w-4/5 h-12 px-4 border border-gray-300 rounded-xl">
+            <div class="w-3"></div>
+            <button onclick="abrirModal()" class="w-1/5 h-12 bg-green-600 font-bold text-white rounded-xl hover:bg-green-700">Cadastrar Pastagem</button>
+        </div>
+
+        <div class="overflow-x-auto bg-white border rounded-2xl">
+            <table class="w-full">
+                <thead class="gap-2">
+                    <tr class="bg-green-600 shadow-neutral-500 text-white text-left">
+                        <th class="rounded-tl-lg py-4 pl-4">ID</th>
+                        <th class="p-4">Área Pastagem</th>
+                        <th class="p-4">Localização</th>
+                        <th class="p-4">Período (Dias)</th>
+                        <th class="p-4">Código Brinco</th>
+                        <th class="rounded-tr-lg w-[12%] text-center p-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each pastagens}}
+                    <tr>
+                        <td class="border-b rounded-tl-xl rounded-bl-xl font-semibold py-4 pl-4">{{Id}}</td>
+                        <td class="border-b font-semibold p-4">{{AreaPastagem}}</td>
+                        <td class="border-b font-semibold p-4">{{LocalizacaoPastagem}}</td>
+                        <td class="border-b font-semibold p-4">{{Periodo}}</td>
+                        <td class="border-b font-semibold p-4">{{fk_Animal_CodigoBrinco}}</td>
+                        <td class="border-b font-semibold text-center p-2">
+                            <button onclick="abrirModal('{{this.Id}}', '{{this.AreaPastagem}}', '{{this.LocalizacaoPastagem}}', '{{this.Periodo}}', '{{this.fk_Animal_CodigoBrinco}}')" class="text-blue-600 hover:underline">Editar</button>
+                            <button onclick="deletePastagem('{{this.Id}}')" class="text-red-600 hover:underline ml-2">Excluir</button>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 id="modalTitle" class="text-xl font-bold mb-4">Cadastrar Pastagem</h2>
+            <form id="pastagemForm">
+                <label class="block mb-2">Área Pastagem:</label>
+                <input id="AreaPastagem" type="number" step="any" name="AreaPastagem" class="w-full p-2 border rounded mb-2">
+
+                <label class="block mb-2">Localização:</label>
+                <input id="LocalizacaoPastagem" type="text" name="LocalizacaoPastagem" class="w-full p-2 border rounded mb-2">
+
+                <label class="block mb-2">Período (Dias):</label>
+                <input id="Periodo" type="number" name="Periodo" class="w-full p-2 border rounded mb-2">
+
+                <label class="block mb-2">Código Brinco:</label>
+                <input id="fk_Animal_CodigoBrinco" type="text" name="fk_Animal_CodigoBrinco" class="w-full p-2 border rounded mb-4">
+
+                <button id="ButtonModal" type="submit" class="w-full bg-green-600 text-white p-2 rounded">Cadastrar</button>
+            </form>
+            <button onclick="fecharModal()" class="w-full mt-2 bg-gray-400 text-white p-2 rounded">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        let idPastagemAtual = null;
+
+        function abrirModal(Id = '', AreaPastagem = '', LocalizacaoPastagem = '', Periodo = '', fk_Animal_CodigoBrinco = '') {
+            idPastagemAtual = Number(Id);
+            document.getElementById("AreaPastagem").value = AreaPastagem;
+            document.getElementById("LocalizacaoPastagem").value = LocalizacaoPastagem;
+            document.getElementById("Periodo").value = Periodo;
+            document.getElementById("fk_Animal_CodigoBrinco").value = fk_Animal_CodigoBrinco;
+
+            document.getElementById("modalTitle").textContent = idPastagemAtual ? "Editar Pastagem" : "Cadastrar Pastagem";
+            const button = document.getElementById("ButtonModal");
+            if (Id) {
+                button.textContent = "Editar";
+            } else {
+                button.textContent = "Cadastrar";
+            }
+            document.getElementById("modal").classList.remove('hidden');
+        }
+
+        function fecharModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('pastagemForm').reset();
+        }
+
+        document.getElementById('pastagemForm').addEventListener('submit', async function(event) {
+            if (idPastagemAtual == '') {
+                idPastagemAtual = null;
+            }
+            event.preventDefault();
+
+            const formData = {
+                Id: idPastagemAtual,
+                AreaPastagem: Number(document.getElementById("AreaPastagem").value),
+                LocalizacaoPastagem: document.getElementById("LocalizacaoPastagem").value,
+                Periodo: Number(document.getElementById("Periodo").value),
+                fk_Animal_CodigoBrinco: document.getElementById("fk_Animal_CodigoBrinco").value
+            };
+
+            const url = idPastagemAtual ? `/pastagem/${idPastagemAtual}` : "/pastagem/";
+            const method = idPastagemAtual ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert(idPastagemAtual ? "Pastagem atualizada com sucesso!" : "Pastagem cadastrada com sucesso!");
+                location.reload();
+            } else {
+                const error = await response.json();
+                alert("Erro: " + JSON.stringify(error.message));
+            }
+        });
+
+        async function deletePastagem(Id) {
+            if (confirm("Tem certeza que deseja excluir esta pastagem?")) {
+                const response = await fetch(`/pastagem/${Id}`, { method: "DELETE" });
+
+                if (response.ok) {
+                    alert("Pastagem excluída com sucesso!");
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    alert("Erro ao excluir: " + error.message);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Gestão Agro - Animais</title>
+</head>
+<body class=" bg-gray-100 flex h-screen">
+ {{>menu}}
+
+<div class="ml-64 p-8 w-full">
+    
+        <div class="flex mb-4">
+            <input type="text" placeholder="Buscar animal..." class="w-4/5 h-12 px-4 border border-gray-300 rounded-xl">
+            <div class="w-3"></div>
+            <button onclick="abrirModal()" class="w-1/5 h-12 bg-green-600 font-bold text-white rounded-xl hover:bg-green-700">Cadastrar Rebanho</button>
+        </div>
+    
+        <div class="overflow-x-auto bg-white border  rounded-2xl ">
+
+            
+            <table class=" w-full">
+                <thead class="gap-2">
+                    <tr class="bg-green-600 shadow-neutral-500 text-white text-left">
+                        <th class=" rounded-tl-lg  py-4 pl-4">ID</th>
+                        <th class=" p-4">Tipo</th>
+                        <th class=" p-4">Destino</th>                  
+                        <th class="rounded-tr-lg   w-[12%] text-center p-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                       {{#each Rebanho}}
+                    <tr  class="">
+    
+                        <td class=" border-b rounded-tl-xl rounded-bl-xl font-semibold py-4 pl-4">{{IdRebanho}}</td>
+                        <td class=" border-b font-semibold p-4">{{Tipo}}</td>
+                        <td class=" border-b font-semibold p-4">{{Destino}}</td>
+                        
+                        <td class="border-b font-semibold text-center p-2">
+                            <button onclick="abrirModal('{{this.IdRebanho}}','{{this.Tipo}}','{{this.Destino}}')" class="text-blue-600 hover:underline">Editar</button>
+                             <button onclick="deleteRebanho('{{this.IdRebanho}}')" class="text-red-600 hover:underline ml-2">Excluir</button>
+                        </td>
+    
+                    </tr>  {{/each}}
+    
+                    <!-- Adicione mais linhas conforme necessário -->
+                </tbody>
+            </table>
+        </div>
+</div>
+
+<div id="modal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 id="modalTitle" class="text-xl font-bold mb-4">Cadastrar Rebanho</h2>
+        <form id="RebanhoForm">
+
+            <label class="block mb-2">Tipo de Rabnho:</label>
+            <input id="Tipo" type="text" name="Tipo" class="w-full p-2 border rounded mb-2">
+
+            <label class="block mb-2">Destino:</label>
+            <input id="Destino" type="text" name="Destino" class="w-full p-2 border rounded mb-2">
+
+
+            <button id="ButtonModal" type="submit" class="w-full bg-green-600 text-white p-2 rounded">Cadastrar</button>
+        </form>
+        <button onclick="fecharModal()" class="w-full mt-2 bg-gray-400 text-white p-2 rounded">Cancelar</button>
+    </div>
+</div>
+<script>
+  let IdRebanhoAtual = null;
+    function abrirModal( IdRebanho = '', Tipo = '',Destino = '') {
+  
+    IdRebanhoAtual = Number(IdRebanho)
+    document.getElementById("Tipo").value = Tipo;
+    document.getElementById("Destino").value = Destino;
+
+    document.getElementById("modalTitle").textContent = IdRebanhoAtual ? "Editar Rebanho"  : "Cadastrar Rebanho";
+     const button = document.getElementById("ButtonModal");
+  if (IdRebanhoAtual) {
+    button.textContent = "Editar";  // Altera o texto para "Editar"
+  } else {
+    button.textContent = "Cadastrar";  // Mantém o texto como "Cadastrar"
+  }
+    document.getElementById("modal").classList.remove('hidden');
+    
+  }
+
+function fecharModal() {
+    document.getElementById('modal').classList.add('hidden');
+     document.getElementById('animalForm').reset()
+}
+
+document.getElementById('RebanhoForm').addEventListener('submit', async function(event) {
+   if(IdRebanhoAtual == ''){
+    IdRebanhoAtual= null
+   }
+    event.preventDefault();
+
+     const formData = {
+        IdRebanho:IdRebanhoAtual,
+      Tipo: document.getElementById("Tipo").value,
+      Destino: document.getElementById("Destino").value,
+    };
+   console.log("esse é o id", formData)
+ 
+    const url = IdRebanhoAtual ? `/rebanhos/${IdRebanhoAtual}` : "/rebanhos/";
+    const method = IdRebanhoAtual ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method: method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData)
+    });
+
+  if (response.ok) {
+    alert(IdRebanhoAtual ? "Rebanho atualizado com sucesso!" : "Animal cadastrado com sucesso!");
+    location.reload();
+  } else {
+    const error = await response.json();
+    alert("Erro: " + JSON.stringify(error.message));
+  }
+});
+
+
+ async function deleteRebanho(IdRebanho) {
+    if (confirm("Tem certeza que deseja excluir este Rebanho?")) {
+      const response = await fetch(`/rebanhos/${IdRebanho}`, { method: "DELETE" });
+
+      if (response.ok) {
+        alert("Rebanho excluído com sucesso!");
+        location.reload();
+      } else {
+        const error = await response.json();
+        alert("Erro ao excluir: " + error.message);
+      }
+    }
+  }
+</script>
+</body>
