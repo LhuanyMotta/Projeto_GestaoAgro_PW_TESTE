@@ -7,5 +7,60 @@
 </head>
 <body>
     {{>login}}
+
+    <script>
+  async function login(event) {
+  event.preventDefault();
+   
+  const NomeUsuario = String(document.getElementById("NomeUsuario").value);
+  const Senha = document.getElementById("Senha").value;
+
+  Login(NomeUsuario,Senha)
+
+}
+async function Login(NomeUsuario, Senha) {
+  try {
+    const response = await fetch('/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ NomeUsuario, Senha }),
+    });
+    
+
+    if (!response.ok) {
+      // Se a resposta não for OK, exibe um erro
+      const errorData = await response.json();
+      alert('Erro no login: ' + errorData.message);
+      return;
+    }
+
+    // O login foi bem-sucedido, agora vamos pegar o token
+    const data = await response.json();
+
+    if (data.token) {
+      // Armazenar o token no localStorage
+      localStorage.setItem('token', data.token);
+      const token = localStorage.getItem('token');
+      // Agora, ao fazer requisições subsequentes, inclua o token no header Authorization
+      fetch('/home', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,  // Envia o token no header
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Acesso à página protegida:', data);
+        });
+    }
+
+  } catch (error) {
+    console.error('Erro no login:', error);
+    alert('Erro no processo de login. Tente novamente.');
+  }
+}
+    </script>
 </body>
 </html>

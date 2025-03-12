@@ -1,40 +1,41 @@
-import { Body, Controller, Get, Post, Render, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, UnauthorizedException, Render, Res } from '@nestjs/common';
 import { LoginService } from './login.service';
+import { Response } from 'express';
+import { CreateLoginDto } from './dto/create-login.dto';
 
-@Controller('auth')
-export class authController {
+@Controller('login')
+export class LoginController {
   constructor(private readonly loginService: LoginService) {}
 
-  @Get('login')
-  @Render('login')  // Renderiza o template 'login.hbs'
-  showLoginForm() {
-    const registerScript = this.loginService.getRegisterScript();
-   
-    return { registerScript };  // Passa o script para o template
+  @Get()
+  @Render('index')
+  gethome(){
+
   }
 
-  // Captura os dados do formulário de login
-  @Post('login')
-  login(@Body() body: { email: string, password: string }) {
-    console.log('Email:', body.email);
-    console.log('Password:', body.password);
-    // Aqui você pode validar o email e senha
-    return 'Login realizado com sucesso!';
-  }
+  @Post()
+  async login(@Body() body: any, @Res() res: Response) {
+    const { NomeUsuario, Senha } = body;
 
-  // Rota para renderizar o formulário de cadastro (parcial)
-  @Get('register')
-  @Render('register')  // Renderiza o template 'register.hbs'
-  registerForm() {
-    return {};  // Retorna um objeto vazio, se você precisar passar dados para a view
-  }
+    // Validação manual
+    if (!NomeUsuario || typeof NomeUsuario !== 'string') {
+      return res.status(400).json({ message: 'NomeUsuario deve ser uma string válida' });
+    }
 
-  // Captura os dados do formulário de cadastro
-  @Post('register')
-  registerUser(@Body() body: { name: string, email: string, password: string }, ) {
-    console.log('Nome:', body.name);
-    console.log('Email:', body.email);
-    console.log('Password:', body.password);
-    
+    if (!Senha || typeof Senha !== 'string') {
+      return res.status(400).json({ message: 'Senha deve ser uma string válida' });
+    }
+
+    // Validação do usuário
+    const user = await this.loginService.validateUser(NomeUsuario, Senha);
+    if (!user) {
+      return res.status(401).json({ message: 'Credenciais inválidas' });
+    }
+
+    // Geração do token
+    const token = await this.loginService.login(user);
+
+    // Retorna apenas o token como string
+    return res.status(200).json({ token });
   }
 }

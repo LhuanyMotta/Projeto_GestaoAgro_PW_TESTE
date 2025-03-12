@@ -1,18 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Render } from '@nestjs/common';
+import { Controller, Get , Render, UseGuards, Res} from '@nestjs/common';
 import { HomeService } from './home.service';
 import { CreateHomeDto } from './dto/create-home.dto';
-import { UpdateHomeDto } from './dto/update-home.dto';
+import { Response } from 'express';
+import { JwtAuthGuard } from 'src/login/jwt-auth.guard';
 
 @Controller('home')
+
 export class HomeController {
   constructor(private readonly homeService: HomeService) {}
 
 
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   @Render('home')
-  findAll() {
- 
+  getProtectedData(@Res() res: Response) {
+    const data = { message: "Acesso permitido!" };
+  return res.status(200).json( data); 
   }
 
 
